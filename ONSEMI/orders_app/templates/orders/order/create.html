@@ -1,0 +1,173 @@
+{% extends "shop/product/base_shop.html" %}
+
+{% block title %}
+  Checkout
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+<style>
+
+.order-info {
+    width: 80%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    overflow:scroll;
+}
+
+form {
+    width: 80%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    height:430px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.order-info h3, .order-info p {
+    margin: 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+    color: #333;
+}
+
+.order-info h3 {
+    font-size: 1.4em;
+    font-weight: bold;
+    text-align: left;
+}
+
+.order-info li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+    list-style: none;
+}
+
+.order-info li span {
+    font-weight: bold;
+    color: #000;
+}
+
+form p {
+    margin: 15px 0;
+    text-align: left;
+}
+
+form input[type="text"], form input[type="email"], form input[type="submit"], form select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+}
+
+form input[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.error {
+    color: #dc3545;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+h1{
+  text-align:center;
+}
+</style>
+  <h1>결제</h1>
+  <div class="order-info">
+    <h3>주문상세</h3>
+      {% for item in cart %}
+        <li>
+          {{ item.quantity }}x {{ item.product.name }}
+          <span>{{ item.total_price }}원</span>
+        </li>
+      {% endfor %}
+    <p>결제금액: {{ cart.get_total_price }}원</p>
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <p>
+        이름:<br>
+        {{ form.name }}
+    </p>
+    <p>
+        이메일:<br>
+        {{ form.email }}
+    </p>
+    <p>
+        주소:<br>
+        {{ form.address }}
+    </p>
+    <p>
+        전화번호:<br>
+        {{ form.phone }}
+    </p>
+    <p>
+        어르신:<br>
+        {{ form.senior }}
+    </p>
+
+    <p><input type="submit" value="주문하기"></p>
+  </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const phoneInput = document.getElementById("id_phone");
+    
+        // 포커스 이벤트: 입력 필드에 포커스가 생길 때 값이 "010-0000-0000"이나 빈 값이면 초기화
+        phoneInput.addEventListener("focus", function() {
+            if (phoneInput.value === "010-0000-0000" || phoneInput.value === "") {
+                phoneInput.value = "";
+            }
+        });
+    
+        // 블러 이벤트: 입력 필드에 포커스가 사라질 때 아무 값도 없으면 placeholder를 빈 값으로 설정
+        phoneInput.addEventListener("blur", function() {
+            if (phoneInput.value === "") {
+                phoneInput.placeholder = "";
+            }
+        });
+    
+        // 입력 이벤트: 사용자가 입력할 때마다 하이픈 자동 추가
+        phoneInput.addEventListener("input", function() {
+            let cleaned = phoneInput.value.replace(/\D/g, '');
+            let match = cleaned.match(/^(\d{3})(\d{0,4})(\d{0,4})$/);
+    
+            if (match) {
+                let formatted = match[1];
+                if (match[2]) {
+                    formatted += '-' + match[2];
+                }
+                if (match[3]) {
+                    formatted += '-' + match[3];
+                }
+                phoneInput.value = formatted;
+            }
+        });
+    
+        // 페이지 로드 시 기본 값 제거
+        phoneInput.value = "";
+    });
+    </script>
+    
+{% endblock %}

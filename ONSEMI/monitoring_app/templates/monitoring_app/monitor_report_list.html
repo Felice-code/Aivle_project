@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+{% extends "monitoring_app/layout.html" %}
+{% load static %}
+{% block title %}ONSEMI{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/monitor_report_list.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+{% block content %}
+<head>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            {% if selected_senior %}
+            <div class="senior-photo">
+                {% if selected_senior.photo %}
+                    <img src="{{ selected_senior.photo.url }}" alt="{{ selected_senior.name }}">
+                {% else %}
+                    <p>사진 없음</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            <h3>{{ selected_senior.name }}</h3>            
+            <form method="get" id="seniorForm">
+                <label for="selected_senior_id" stlye="float:left;">어르신 선택:</label>
+                <select name="selected_senior_id" onchange="document.getElementById('seniorForm').submit();">
+                    {% for senior in senior_list %}
+                        <option value="{{ senior.id }}" {% if selected_senior_id == senior.id|stringformat:"s" %}selected{% endif %}>{{ senior.name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="sort_by">날짜 정렬:</label>
+                <select name="sort_by" id="sort_by">
+                    <option value="-created_at" {% if request.GET.sort_by == '-created_at' %}selected{% endif %}>최신순</option>
+                    <option value="created_at" {% if request.GET.sort_by == 'created_at' %}selected{% endif %}>오래된 순</option>
+                </select>
+                {{ form.start_date.label_tag }}
+                <input type="text" id="start_date" name="start_date" class="date-picker" placeholder="날짜선택" value="{{ form.start_date.value|default_if_none:'' }}"/>
+                {{ form.end_date.label_tag }}
+                <input type="text" id="end_date" name="end_date" class="date-picker" placeholder="날짜선택" value="{{ form.end_date.value|default_if_none:'' }}"/>
+                
+                <label for="type_filter">서비스 종류:</label>
+                <select name="type_filter" id="type_filter">
+                    <option value="all" {% if type_filter == 'all' %}selected{% endif %}>전체</option>
+                    <option value="shop" {% if type_filter == 'shop' %}selected{% endif %}>배송</option>
+                    <option value="visit" {% if type_filter == 'visit' %}selected{% endif %}>방문</option>
+                    <option value="hospital" {% if type_filter == 'hospital' %}selected{% endif %}>병원</option>
+                </select>
+                <button type="submit">적용</button>
+            </form>
+        </div>
+        <div class="main-content">
+            <br><h2>작성된 보고서 목록</h2>
+            <table class="table-report">
+                <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>종류</th>
+                        <th>제목</th>
+                        <th>내용</th>
+                        <th>파킨슨 요청</th>
+                        <th>주소</th>
+                        <th>방문날짜</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report_detail in reports_details %}
+                    <tr class="clickable-row" 
+                        data-care-type="{{ report_detail.report.care.care_type }}"
+                        data-datetime="{{ report_detail.report.care.datetime|date:'Y년 n월 j일 A g:i' }}"
+                        data-visit_date="{{ report_detail.report.care.visit_date|date:'Y년 n월 j일' }} {{ report_detail.report.care.visit_time|date:'A g:i' }}"
+                        data-title="{{ report_detail.report.care.title }}"
+                        data-content="{{ report_detail.report.care.content }}"
+                        data-address= "{% for senior in report_detail.seniors.all %}{{ senior.address }} {{senior.detail_address}}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                        data-no-issue="{{ report_detail.report.no_issue }}"
+                        data-eye="{{ report_detail.report.eye }}"
+                        data-teeth="{{ report_detail.report.teeth }}"
+                        data-skin="{{ report_detail.report.skin }}"
+                        data-back="{{ report_detail.report.back }}"
+                        data-other="{{ report_detail.report.other }}"
+                        data-other-text="{{ report_detail.report.other_text }}"
+                        data-parkinson-diagnosis="{{ report_detail.report.care.parkinson_diagnosis }}"
+                        data-audio-test-result="{{ report_detail.report.audio_test_result }}"
+                        data-doctor-opinion="{{ report_detail.report.doctor_opinion }}"
+                        data-user-request="{{ report_detail.report.user_request }}"
+                        data-images='{% for image in report_detail.images %}{{ image.image.url }}{% if not forloop.last %},{% endif %}{% endfor %}'>
+                        <td>
+                            {% for senior in report_detail.seniors %}
+                                {{ senior.name }}<br>
+                            {% endfor %}
+                        </td>
+                        <td>{{ report_detail.report.care.care_type }}</td>
+                        <td class="title-cell">{{ report_detail.report.care.title }}</td>
+                        <td class="content-cell">{{ report_detail.report.care.content }}</td>
+                        <td>{% if report_detail.report.care.parkinson_diagnosis %} O {% else %}X {% endif %}</td>
+                        <td>
+                            {% for senior in report_detail.seniors %}
+                                {{ senior.address }} {{ senior.detail_address }}<br>
+                            {% endfor %}
+                        </td>
+                        <td>{{ report_detail.report.care.visit_date|date:"Y년 n월 j일" }} {{ report_detail.report.care.visit_time|date:" A g:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% with request.GET.urlencode as params %}
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?{{ params }}&page=1">&laquo; 처음</a>
+                        <a href="?{{ params }}&page={{ page_obj.previous_page_number }}">이전</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?{{ params }}&page={{ page_obj.next_page_number }}">다음</a>
+                        <a href="?{{ params }}&page={{ page_obj.paginator.num_pages }}">마지막 &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+            {% endwith %}
+        </div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h1>보고서 상세</h1>
+            <div class="modal-container">
+                <p><strong>ㆍ서비스 종류 : </strong> <span id="reportType"></span></p>
+                <p><strong>ㆍ서비스 신청 날짜 : </strong> <span id="reportTime"></span></p>
+                <p><strong>ㆍ방문 날짜 : </strong> <span id="visitTime"></span></p>
+                <p><strong>ㆍ제목 : </strong> <span id="reportTitle"></span></p>
+                <p><strong>ㆍ내용 : </strong> <span id="reportContent"></span></p>
+                <p><strong>ㆍ주소 : </strong> <span id="reportAddress"></span></p>
+                <p><strong>ㆍ특이사항 : </strong> <span id="reportIssues"></span></p>
+                <p><strong>ㆍ업로드 이미지 : </strong> <span id="reportImages"></span></p>
+                <p><strong id = "doctorOpinionDiv">ㆍ의사소견 : </strong> <span id="reportDoctorOpinion"></span></p>
+                <p id = "parkinsonDiv"><strong>ㆍ파킨슨병 진단 결과 : </strong> <span id="reportParkinson"></span></p>
+                <p><strong>ㆍ전달사항 : </strong> <span id="reportUserRequest"></span></p>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'js/monitor_report_list.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+{% endblock %}
+</html>
