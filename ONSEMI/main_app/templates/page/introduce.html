@@ -1,0 +1,97 @@
+{% extends 'layout.html' %}
+
+{% block title %}소개{% endblock %}
+{% load static %}
+{% block content %}
+<div class="introduce-container">
+    <div class="image-grid">
+        <div class="image-item">
+            <img src="{% static 'main/h.jpg' %}" alt="member">
+            <p>허혁<br>PM, Back-end, Infra</p>
+        </div>
+        <div class="image-item">
+            <img src="{% static 'main/hj.png' %}" alt="member">
+            <p>강현진<br>Full-stack, DB</p>
+        </div>
+        <div class="image-item">
+            <img src="{% static 'main/member-g.jpg' %}" alt="member">
+            <p>김건<br>Back-end, AI</p>
+        </div>
+        <div class="image-item">
+            <img src="{% static 'main/member-yj.jpg' %}" alt="member">
+            <p>김예진<br>Front-end</p>
+        </div>
+        <div class="image-item">
+            <img src="{% static 'main/member-js.jpg' %}" alt="member">
+            <p>남지성<br>Front-end</p>
+        </div>
+        <div class="image-item">
+            <img src="{% static 'main/member-dv.jpg' %}" alt="member">
+            <p>서다빈<br>Full-stack</p>
+        </div>
+        <div class="image-item">
+            <img src="{% static 'main/member-sp.jpg' %}" alt="member">
+            <p>이성표<br>AI</p>
+        </div>
+        <div class="image-item">
+            <img src="{% static 'main/member-yh.jpg' %}" alt="member">
+            <p>이윤혁<br>Full-stack</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .introduce-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 40px 20px;
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+    }
+
+    .image-item {
+        text-align: center;
+        max-width: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 200px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background-color: #f9f9f9;
+    }
+
+    .image-item p {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #333;
+        text-align: center;
+    }
+
+    @media (max-width: 992px) {
+        .image-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .image-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+    }
+</style>
+{% endblock %}
