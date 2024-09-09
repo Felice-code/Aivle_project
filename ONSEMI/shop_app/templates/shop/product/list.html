@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+{% extends "shop/product/base_shop.html" %}
+{% load static %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+{% block title %}
+  {% if category %}{{ category.name }}{% else %}상품{% endif %}
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+  }
+
+  .banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #026738; /* Green background color */
+    padding-right:80px;
+    padding-left:80px;
+    color: white;
+    margin-bottom: 20px; /* Add some space below the banner */
+  }
+
+  .banner-text {
+    max-width: 50%;
+  }
+
+  .banner-text h1 {
+    font-size: 2em;
+    margin: 0 0 10px;
+  }
+
+  .banner-text p {
+    font-size: 1.2em;
+    margin: 0;
+  }
+
+  .banner img {
+    max-width: 45%;
+    height: auto;
+  }
+
+  #content {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-bottom: 1px solid #ddd;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .categories {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 25%; /* Increased width */
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    box-sizing: border-box;
+  }
+
+  .cate {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+  }
+
+  .categories ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .categories li {
+    margin-bottom: 10px;
+  }
+
+  .categories li a {
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .categories li.selected a,
+  .categories li a:hover {
+    background-color: #156741;
+    color: #fff;
+  }
+
+  .order-history {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .order-history a {
+    text-decoration: none;
+    color: #fff;
+    background-color: #156741;
+    padding: 10px 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+    margin-left: 10px;
+  }
+
+  .order-history a:hover {
+    background-color: #218838; /* Darker green for hover */
+    color: #fff;
+  }
+
+  .main-content {
+    flex-direction: column;
+    width: 65%; /* Adjusted width */
+    margin-left: 20px;
+  }
+
+  .price-list {
+    width: 100%;
+    margin: 0 auto; /* Center the table */
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+  }
+
+  .price-list tr {
+    border-bottom: 1px solid #ddd;
+  }
+
+  .price-list th, .price-list td {
+    padding: 10px;
+    text-align: left;
+  }
+
+  .number {
+    background-color: #156741;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    display: inline-block;
+    text-align: center;
+    margin-right: 10px;
+  }
+
+  .item-name {
+    font-weight: bold;
+    display: inline-block;
+    width: 25%; /* Increased width */
+  }
+
+  .price {
+    display: inline-block;
+  }
+
+  .change-increase {
+    color: red;
+    display: inline-block;
+  }
+
+  .change-decrease {
+    color: blue;
+    display: inline-block;
+  }
+
+  .recent-products-container {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 100px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    overflow-y: auto;
+  }
+
+  .recent-products-header {
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    font-size: 12px;
+  }
+
+  .recent-products-content {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .recent-products .product-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .recent-products .product-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .recent-products img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+  }
+
+  .recent-products h3 {
+    font-size: 0.8em;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+
+  .recent-products button {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 3px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.8em;
+  }
+
+  .recent-products button:hover {
+    background-color: #e60000;
+  }
+
+  .product-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* Left align the items */
+    width: 100%;
+    padding: 0; /* Ensure there is no padding */
+  }
+  
+  .product-list .item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    width: calc(33% - 20px); /* Adjust as needed */
+    box-sizing: border-box;
+    height: 300px; /* Fixed height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-right: 20px; /* Add margin to the right */
+  }
+
+  .product-list .item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .product-list img {
+    max-width: 100%;
+    max-height: 150px; /* Adjust height */
+    margin-bottom: 10px;
+    object-fit: contain; /* Ensure the image fits within the container */
+  }
+
+  .product-list a {
+    text-decoration: none;
+    color: #333;
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    flex-grow: 1;
+  }
+
+  .product-list .item .price {
+    font-size: 1em;
+    color: #000;
+    margin-top: auto; /* Push the price to the bottom */
+  }
+
+  /* 반응형 스타일 */
+  @media (max-width: 768px) {
+    #content {
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+    }
+
+    .categories {
+      width: 100%;
+      align-items: center;
+      border-right: none;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .categories ul {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .categories li {
+      margin: 5px;
+    }
+
+    .main-content {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .price-list {
+      width: 100%;
+    }
+
+    .product-list .item {
+      width: calc(50% - 20px); /* Two items per row on medium screens */
+    }
+
+    .recent-products-container {
+      bottom: 20px;
+      right: 20px;
+      width: 120px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .product-list .item {
+      width: calc(100% - 20px); /* One item per row on small screens */
+    }
+
+    .recent-products-container {
+      bottom: 30px;
+      right: 30px;
+      width: 140px;
+    }
+  }
+
+  .price-prediction {
+    width: 100%; /* Adjusted width */
+    margin-top: 20px;
+  }
+
+  .price-prediction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    
+    {% comment %} width: calc(100% + 17px);  {% endcomment %}
+    box-sizing: border-box;
+  }
+
+  .price-prediction-content {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-top: none;
+    {% comment %} width: calc(100% - 4px);  {% endcomment %}
+  }
+
+  .predict-price-section {
+    width: 100%;
+  }
+
+  .predict-price {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+  }
+
+  .predict-price button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .predict-price button:nth-child(2) {
+    background-color: blue;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .price-prediction button:nth-child(1):hover {
+    background-color: darkred; /* 상승 예측 버튼 호버 효과 */
+  }
+
+  .price-prediction button:nth-child(2):hover {
+    background-color: darkblue; /* 하락 예측 버튼 호버 효과 */
+  }
+
+  /* 검색 스타일 추가 */
+  .search-box {
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #026738;
+    width: 100%;
+    color:white;
+  }
+
+  .search-box input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    flex: 1;
+    margin-right: 10px;
+    width: 80%;
+  }
+
+  .search-box button:hover {
+    background-color: #218838;
+  }
+  .search-title {
+    padding: 20px 20px 0px 20px;
+  }
+  .search-box form {
+    padding: 0px 20px 20px 20px;
+  }
+</style>
+
+<body>
+  <div class="banner">
+    <div class="banner-text">
+      <h1>신선한 식품 주문 및 배송도 온새미에서</h1>
+      <p>온새미를 통해서 부모님에게 신선식품과 마음을 전달하세요</p>
+    </div>
+    <img src="{% static 'image/onsemi_img.png' %}" alt="Delivery Image">
+  </div>
+  <div id="content">
+    <div class="categories">
+      <div class="search-box">
+        <div class="search-title">
+          <h2>제품 검색</h2><hr>
+        </div>
+        <form method="get" action="{% url 'shop_app:product_list' %}">
+          <input type="text" name="query" placeholder="검색어 입력" value="{{ query|default_if_none:'' }}">
+        </form>
+      </div>
+      <h1 class="cate">카테고리</h1>
+      <ul>
+        <li {% if not category %}class="selected"{% endif %}>
+          <a href="{% url "shop_app:product_list" %}">전체</a>
+        </li>
+        {% for c in categories %}
+          <li {% if category.slug == c.slug %}class="selected"{% endif %}>
+            <a href="{% url 'shop_app:product_list_by_category' category_slug=c.slug %}">{{ c.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="price-prediction">
+        <div class="price-prediction-header" onclick="togglePricePrediction()">
+          <span>가격변동</span>
+          <span id="price-toggle-icon">-</span>
+        </div>
+          <!-- 쉼표 추가해서 가독성 높이기 -->
+        <div id="price-prediction-content" class="price-prediction-content">
+          <div id="predict-price-increase" class="predict-price-section">
+            <h2>가격 <span class="highlight-increase" style="color:red;">상승&uarr;</span> 전망 목록</h2>
+            {% load humanize %}
+            <table class="price-list">
+              <tr>
+                <td><span class="number">1</span>
+                <span class="item-name">{{ increases.0.0 }}</span>
+                <span class="price">{{ increases.0.1|intcomma }}원 &nbsp;&rarr;</span>
+                <span class="change-increase">{{ increases.0.2|intcomma }}원</span></td>
+              </tr>
+              <tr>
+                <td><span class="number">2</span>
+                <span class="item-name">{{ increases.1.0 }}</span>
+                <span class="price">{{ increases.1.1|intcomma }}원 &nbsp;&rarr;</span>
+                <span class="change-increase">{{ increases.1.2|intcomma }}원</span></td>
+              </tr>
+              <tr>
+                <td><span class="number">3</span>
+                <span class="item-name">{{ increases.2.0 }}</span>
+                <span class="price">{{ increases.2.1|intcomma }}원 &nbsp;&rarr;</span>
+                <span class="change-increase">{{ increases.2.2|intcomma }}원</span></td>
+              </tr>
+            </table>
+          </div>
+          <div id="predict-price-decrease" class="predict-price-section" style="display: none;">
+            <h2>가격 <span class="highlight-decrease" style="color:blue;">하락&darr;</span> 전망 목록</h2>
+            {% load humanize %}
+            <table class="price-list">
+              <tr>
+                <td><span class="number">1</span>
+                <span class="item-name">{{ decreases.0.0 }}</span>
+                <span class="price">{{ decreases.0.1|intcomma }}원 &nbsp;&rarr;</span>
+                <span class="change-decrease">{{ decreases.0.2|intcomma }}원</span></td>
+              </tr>
+              <tr>
+                <td><span class="number">2</span>
+                <span class="item-name">{{ decreases.1.0 }}</span>
+                <span class="price">{{ decreases.1.1|intcomma }}원 &nbsp;&rarr;</span>
+                <span class="change-decrease">{{ decreases.1.2|intcomma }}원</span></td>
+              </tr>
+              <tr>
+                <td><span class="number">3</span>
+                <span class="item-name">{{ decreases.2.0 }}</span>
+                <span class="price">{{ decreases.2.1|intcomma }}원 &nbsp;&rarr;</span>
+                <span class="change-decrease">{{ decreases.2.2|intcomma }}원</span></td>
+              </tr>
+            </table>
+          </div>
+          <div class="predict-price">
+            <button id="show-increase">상승 예측</button>
+            <button id="show-decrease">하락 예측</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="order-history">
+        <a href="{% url 'orders_app:my_orders' %}">주문 내역</a>
+      </div>
+      <h1 style="width: 100%;">{% if category %}{{ category.name }}{% else %}전체 상품{% endif %}</h1>
+      <div id="main" class="product-list">
+        {% for product in products %}
+        <!-- 가격이 0이면 숨기게 처리 -->
+          {% if product.price > 0 %} 
+            <div class="item">
+              <a href="{{ product.get_absolute_url }}">
+                <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}">
+              </a>
+              <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+              <br>
+              {{ product.price|intcomma }}원
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div class="recent-products-container">
+        <div class="recent-products-header">최근 본 상품</div>
+        <div class="recent-products-content">
+          {% for product in recent_products %}
+            <div class="product-item">
+              <a href="{% url 'shop_app:product_detail' product.id product.slug %}">
+                <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}" alt="{{ product.name }}">
+                <h3>{{ product.name }}</h3>
+              </a>
+              <form action="{% url 'shop_app:remove_from_recent_products' product.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">X</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+{% endblock %}
+
+{% block script %}
+<script>
+  function togglePricePrediction() {
+    var content = document.getElementById('price-prediction-content');
+    var icon = document.getElementById('price-toggle-icon');
+    if (content.style.display === 'none' || content.style.display === '') {
+      content.style.display = 'block';
+      icon.textContent = '-';
+    } else {
+      content.style.display = 'none';
+      icon.textContent = '+';
+    }
+  }
+
+  document.getElementById('show-decrease').addEventListener('click', function() {
+    document.getElementById('predict-price-decrease').style.display = 'block';
+    document.getElementById('predict-price-increase').style.display = 'none';
+  });
+
+  document.getElementById('show-increase').addEventListener('click', function() {
+    document.getElementById('predict-price-decrease').style.display = 'none';
+    document.getElementById('predict-price-increase').style.display = 'block';
+  });
+</script>
+{% endblock %}
